@@ -1,5 +1,6 @@
 import copy
 
+
 class CFG:
     def __init__(self):
         self.variables = set()
@@ -31,6 +32,7 @@ class CFG:
     def remove_production(self, lhs, rhs):
         self.productions.get(lhs).remove(rhs)
 
+
 def get_nullables(cfg):
     old_nullables = set()
     new_nullables = set()
@@ -52,6 +54,7 @@ def get_nullables(cfg):
                         new_nullables.add(lhs)
         
     return old_nullables
+
 
 def remove_null_productions(old_cfg):
     cfg = copy.deepcopy(old_cfg)
@@ -80,18 +83,66 @@ def remove_null_productions(old_cfg):
     return cfg
 
 
+def get_unit_production_graph(cfg):
+    graph = {}
+    for lhs, rhss in cfg.productions.items():
+        for rhs in rhss:
+            if rhs in cfg.variables:
+                graph.setdefault(lhs, set()).add(rhs)
+
+    print(f"graph:\n{graph}")
+    cur = graph
+    new = {}
+    flag = False
+
+    while not flag:
+        for lhs, rhss in cur.items():
+            for rhs in rhss:
+                if rhs in graph.keys():
+                    for rhs2 in graph.get(rhs):
+                        if (rhs2 != lhs 
+                            and (lhs not in graph.keys() 
+                                 or rhs2 not in graph.get(lhs))):
+                            new.setdefault(lhs, set()).add(rhs2)
+
+        print(f"new:\n{new}")
+        
+        for lhs, rhs in graph.items():
+            if lhs in new.keys():
+                rhs.update(new.get(lhs))
+
+        cur = new
+        if len(new.items()) == 0:
+            flag = True
+        new = {}
+
+    return graph
+
+
+def remove_unit_productions(cfg):
+    pass
+
+
 
 if __name__ == "__main__":
     cfg = CFG()
-    cfg.start = 'S'
-    cfg.terminals = {'a', 'b', 'd'}
-    cfg.variables = {'S', 'A', 'B', 'C', 'D'}
-    cfg.add_production('S', "ABaC")
-    cfg.add_production('A', "BC")
-    cfg.add_production('B', "b")
-    cfg.add_production('B', "Ɛ")
-    cfg.add_production('C', "D")
-    cfg.add_production('C', "Ɛ")
-    cfg.add_production('D', "d")
+    # cfg.start = 'S'
+    # cfg.terminals = {'a', 'b', 'd'}
+    # cfg.variables = {'S', 'A', 'B', 'C', 'D'}
+    # cfg.add_production('S', "ABaC")
+    # cfg.add_production('A', "BC")
+    # cfg.add_production('B', "b")
+    # cfg.add_production('B', "Ɛ")
+    # cfg.add_production('C', "D")
+    # cfg.add_production('C', "Ɛ")
+    # cfg.add_production('D', "d")
 
-    print(remove_null_productions(cfg))
+    cfg.start = 'S'
+    cfg.variables = {'S', 'A', 'B', 'C', 'D'}
+    cfg.add_production("S", "A")
+    cfg.add_production("A", "C")
+    cfg.add_production("A", "S")
+    cfg.add_production("B", "D")
+    cfg.add_production("D", "A")
+
+    print(get_unit_production_graph(cfg))
