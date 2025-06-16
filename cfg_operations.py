@@ -25,7 +25,8 @@ class CFG:
     
     def add_production(self, lhs, rhs):
         if lhs not in self.variables:
-            print(f"Production {lhs} -> {rhs} does not follow context-free grammar rules.")
+            print(f"Production {lhs} -> {rhs} does not follow context-free "
+                  "grammar rules.")
             return
         self.productions.setdefault(lhs, set()).add(rhs)
 
@@ -79,7 +80,8 @@ def remove_null_productions(old_cfg):
                         if c in nullables:
                             split = rhs.split(c, 1)
                             cfg.add_production(lhs, split[0] + split[1])
-                            new_prod.setdefault(lhs, set()).add(split[0] + split[1])
+                            (new_prod.setdefault(lhs, set())
+                             .add(split[0] + split[1]))
     return cfg
 
 
@@ -129,7 +131,8 @@ def remove_unit_productions(old_cfg):
 
     for lhs, rhss in unit_prod.items():
         for rhs in rhss:
-            cfg.productions.setdefault(lhs, set()).update(cfg.productions.get(rhs))
+            (cfg.productions.setdefault(lhs, set())
+             .update(cfg.productions.get(rhs)))
 
     return cfg
 
