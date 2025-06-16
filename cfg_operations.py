@@ -89,8 +89,6 @@ def get_unit_production_graph(cfg):
         for rhs in rhss:
             if rhs in cfg.variables:
                 graph.setdefault(lhs, set()).add(rhs)
-
-    print(f"graph:\n{graph}")
     cur = graph
     new = {}
     flag = False
@@ -104,8 +102,6 @@ def get_unit_production_graph(cfg):
                             and (lhs not in graph.keys() 
                                  or rhs2 not in graph.get(lhs))):
                             new.setdefault(lhs, set()).add(rhs2)
-
-        print(f"new:\n{new}")
         
         for lhs, rhs in graph.items():
             if lhs in new.keys():
@@ -119,9 +115,23 @@ def get_unit_production_graph(cfg):
     return graph
 
 
-def remove_unit_productions(cfg):
-    pass
+def remove_unit_productions(old_cfg):
+    unit_prod = get_unit_production_graph(old_cfg)
+    print(f"unit_prod:\n{unit_prod}")
+    cfg = copy.deepcopy(old_cfg)
+    print(f"productions:\n{cfg.productions}")
 
+    for lhs, rhss in cfg.productions.items():
+        rhss_frozen = frozenset(rhss)
+        for rhs in rhss_frozen:
+            if rhs in cfg.variables:
+                cfg.productions.get(lhs).remove(rhs)
+
+    for lhs, rhss in unit_prod.items():
+        for rhs in rhss:
+            cfg.productions.setdefault(lhs, set()).update(cfg.productions.get(rhs))
+
+    return cfg
 
 
 if __name__ == "__main__":
@@ -138,11 +148,14 @@ if __name__ == "__main__":
     # cfg.add_production('D', "d")
 
     cfg.start = 'S'
-    cfg.variables = {'S', 'A', 'B', 'C', 'D'}
-    cfg.add_production("S", "A")
-    cfg.add_production("A", "C")
-    cfg.add_production("A", "S")
-    cfg.add_production("B", "D")
-    cfg.add_production("D", "A")
+    cfg.variables = {'S', 'A', 'B'}
+    cfg.terminals = {'a', 'b', 'c'}
+    cfg.add_production("S", "Aa")
+    cfg.add_production("S", "B")
+    cfg.add_production("A", "a")
+    cfg.add_production("A", "bc")
+    cfg.add_production("A", "B")
+    cfg.add_production("B", "A")
+    cfg.add_production("B", "bb")
 
-    print(get_unit_production_graph(cfg))
+    print(remove_unit_productions(cfg))
