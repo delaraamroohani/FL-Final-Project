@@ -119,9 +119,7 @@ def get_unit_production_graph(cfg):
 
 def remove_unit_productions(old_cfg):
     unit_prod = get_unit_production_graph(old_cfg)
-    print(f"unit_prod:\n{unit_prod}")
     cfg = copy.deepcopy(old_cfg)
-    print(f"productions:\n{cfg.productions}")
 
     for lhs, rhss in cfg.productions.items():
         rhss_frozen = frozenset(rhss)
@@ -135,6 +133,42 @@ def remove_unit_productions(old_cfg):
              .update(cfg.productions.get(rhs)))
 
     return cfg
+
+
+def get_non_generating_symbols(cfg):
+    old = set()
+    new = set()
+
+    for lhs, rhss in cfg.productions.items():
+        for rhs in rhss:
+            flag = False
+            for c in rhs:
+                if c not in cfg.terminals and c != "Ɛ":
+                    flag = True
+            if flag == False:
+                new.add(lhs)
+
+    while old != new:
+        old = copy.deepcopy(new)
+        for lhs, rhss in cfg.productions.items():
+            for rhs in rhss:
+                flag = False
+                for c in rhs:
+                    if c not in cfg.terminals and c not in old:
+                        flag = True
+                if flag == False:
+                    new.add(lhs)
+            
+    non_gen = cfg.variables.difference(old)
+    return non_gen
+
+
+def get_unreachable_symbols(cfg):
+    pass
+
+
+def remove_useless_productions(cfg):
+    pass
 
 
 if __name__ == "__main__":
@@ -151,14 +185,18 @@ if __name__ == "__main__":
     # cfg.add_production('D', "d")
 
     cfg.start = 'S'
-    cfg.variables = {'S', 'A', 'B'}
-    cfg.terminals = {'a', 'b', 'c'}
-    cfg.add_production("S", "Aa")
+    cfg.variables = {'S', 'A', 'B', 'C', 'D'}
+    cfg.terminals = {'a', 'c', 'd'}
+    cfg.add_production("S", "a")
+    cfg.add_production("S", "aA")
     cfg.add_production("S", "B")
-    cfg.add_production("A", "a")
-    cfg.add_production("A", "bc")
-    cfg.add_production("A", "B")
-    cfg.add_production("B", "A")
-    cfg.add_production("B", "bb")
+    cfg.add_production("S", "C")
+    cfg.add_production("A", "aB")
+    cfg.add_production("A", "Ɛ")
+    cfg.add_production("B", "Aa")
+    cfg.add_production("C", "cCD")
+    cfg.add_production("D", "ddd")
 
-    print(remove_unit_productions(cfg))
+
+
+    print(get_non_generating_symbols(cfg))
