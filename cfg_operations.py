@@ -164,7 +164,22 @@ def get_non_generating_symbols(cfg):
 
 
 def get_unreachable_symbols(cfg):
-    pass
+    old = set()
+    new = set()
+
+    new.add(cfg.start)
+
+    while old != new:
+        old = copy.deepcopy(new)
+        for lhs, rhss in cfg.productions.items():
+            if lhs in old:
+                for rhs in rhss:
+                    for c in rhs:
+                        if c in cfg.variables:
+                            new.add(c)
+    
+    unreachable = cfg.variables.difference(old)
+    return unreachable
 
 
 def remove_useless_productions(cfg):
@@ -185,18 +200,16 @@ if __name__ == "__main__":
     # cfg.add_production('D', "d")
 
     cfg.start = 'S'
-    cfg.variables = {'S', 'A', 'B', 'C', 'D'}
-    cfg.terminals = {'a', 'c', 'd'}
+    cfg.variables = {'S', 'A', 'B', 'D'}
+    cfg.terminals = {'a', 'd'}
     cfg.add_production("S", "a")
     cfg.add_production("S", "aA")
     cfg.add_production("S", "B")
-    cfg.add_production("S", "C")
     cfg.add_production("A", "aB")
     cfg.add_production("A", "Ɛ")
     cfg.add_production("B", "Aa")
-    cfg.add_production("C", "cCD")
     cfg.add_production("D", "ddd")
 
 
 
-    print(get_non_generating_symbols(cfg))
+    print(get_unreachable_symbols(cfg))
