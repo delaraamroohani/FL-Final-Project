@@ -182,8 +182,32 @@ def get_unreachable_symbols(cfg):
     return unreachable
 
 
-def remove_useless_productions(cfg):
-    pass
+def remove_useless_productions(old_cfg):
+    cfg = copy.deepcopy(old_cfg)
+    non_gen = get_non_generating_symbols(cfg)
+
+    for lhs, rhss in cfg.productions.items():
+        if lhs in non_gen:
+            cfg.productions.get(lhs).clear()
+        else:
+            rhss_frozen = frozenset(rhss)
+            for rhs in rhss_frozen:
+                for c in rhs:
+                    if c in non_gen:
+                        rhss.remove(rhs)
+
+    unreachable = get_unreachable_symbols(cfg)
+
+    for lhs, rhss in cfg.productions.items():
+        if lhs in unreachable:
+            cfg.productions.get(lhs).clear()
+        else:
+            for rhs in rhss:
+                for c in rhs:
+                    if c in unreachable:
+                        rhss.remove(rhs)
+
+    return cfg
 
 
 if __name__ == "__main__":
@@ -200,16 +224,16 @@ if __name__ == "__main__":
     # cfg.add_production('D', "d")
 
     cfg.start = 'S'
-    cfg.variables = {'S', 'A', 'B', 'D'}
-    cfg.terminals = {'a', 'd'}
+    cfg.variables = {'S', 'A', 'B', 'C', 'D'}
+    cfg.terminals = {'a', 'c', 'd'}
     cfg.add_production("S", "a")
     cfg.add_production("S", "aA")
     cfg.add_production("S", "B")
+    cfg.add_production("S", "C")
     cfg.add_production("A", "aB")
     cfg.add_production("A", "Ɛ")
     cfg.add_production("B", "Aa")
+    cfg.add_production("C", "cCD")
     cfg.add_production("D", "ddd")
 
-
-
-    print(get_unreachable_symbols(cfg))
+    print(remove_useless_productions(cfg))
