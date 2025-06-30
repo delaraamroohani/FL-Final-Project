@@ -1,5 +1,9 @@
 import copy
 
+alphabet_lower = list("abcdefghijklmnopqrstuvwxyz")
+alphabet_upper = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
+alphabet_lower_pointer = 0
+alphabet_upper_pointer = 0
 
 class CFG:
     def __init__(self):
@@ -40,7 +44,6 @@ def get_nullables(cfg):
     for lhs, rhss in cfg.productions.items():
         for rhs in rhss:
             if rhs == "Ɛ":
-                print(f"rhs is epsilon: {lhs} -> {rhs}")
                 new_nullables.add(lhs)
 
     while old_nullables != new_nullables:
@@ -210,30 +213,64 @@ def remove_useless_productions(old_cfg):
     return cfg
 
 
+def convert_to_gcnf(old_cfg): # a GCNF is a Generalised Chomsky Normal Form
+    cfg = copy.deepcopy(old_cfg)
+    cfg = remove_null_productions(cfg)
+    cfg = remove_unit_productions(cfg)
+    cfg = remove_useless_productions(cfg)
+
+    terminal_productions = set()
+    for lhs, rhss in cfg.productions.items():
+        for rhs in rhss:
+            if len(rhs) == 1 and rhs[0] in cfg.terminals:
+                terminal_productions.add((lhs, rhs))
+
+    for lhs, rhss in cfg.productions.items():
+        rhss_frozen = frozenset(rhss)
+        for rhs in rhss_frozen:
+            if len(rhs) > 1:
+                cfg.remove_production(lhs, rhs)
+                for r in rhs:
+                    if r in cfg.terminals:
+                        flag = False
+                        for v, t in terminal_productions:
+                            if t == r:
+                                flag = True
+                                rhs = rhs.replace(r, v)
+                        if not flag:
+                            global alphabet_upper, alphabet_upper_pointer
+                            terminal_productions.add((alphabet_upper[alphabet_upper_pointer], r))
+                            rhs = rhs.replace(r, alphabet_upper[alphabet_upper_pointer])
+                            alphabet_upper_pointer += 1
+                cfg.add_production(lhs, rhs)
+
+    return cfg
+
+                    
 if __name__ == "__main__":
     cfg = CFG()
-    # cfg.start = 'S'
-    # cfg.terminals = {'a', 'b', 'd'}
-    # cfg.variables = {'S', 'A', 'B', 'C', 'D'}
-    # cfg.add_production('S', "ABaC")
-    # cfg.add_production('A', "BC")
-    # cfg.add_production('B', "b")
-    # cfg.add_production('B', "Ɛ")
-    # cfg.add_production('C', "D")
-    # cfg.add_production('C', "Ɛ")
-    # cfg.add_production('D', "d")
-
     cfg.start = 'S'
+    cfg.terminals = {'a', 'b', 'd'}
     cfg.variables = {'S', 'A', 'B', 'C', 'D'}
-    cfg.terminals = {'a', 'c', 'd'}
-    cfg.add_production("S", "a")
-    cfg.add_production("S", "aA")
-    cfg.add_production("S", "B")
-    cfg.add_production("S", "C")
-    cfg.add_production("A", "aB")
-    cfg.add_production("A", "Ɛ")
-    cfg.add_production("B", "Aa")
-    cfg.add_production("C", "cCD")
-    cfg.add_production("D", "ddd")
+    cfg.add_production('S', "ABaC")
+    cfg.add_production('A', "BC")
+    cfg.add_production('B', "b")
+    cfg.add_production('B', "Ɛ")
+    cfg.add_production('C', "D")
+    cfg.add_production('C', "Ɛ")
+    cfg.add_production('D', "d")
 
-    print(remove_useless_productions(cfg))
+    # cfg.start = 'S'
+    # cfg.variables = {'S', 'A', 'B', 'C', 'D'}
+    # cfg.terminals = {'a', 'c', 'd'}
+    # cfg.add_production("S", "a")
+    # cfg.add_production("S", "aA")
+    # cfg.add_production("S", "B")
+    # cfg.add_production("S", "C")
+    # cfg.add_production("A", "aB")
+    # cfg.add_production("A", "Ɛ")
+    # cfg.add_production("B", "Aa")
+    # cfg.add_production("C", "cCD")
+    # cfg.add_production("D", "ddd")
+
+    print(convert_to_gcnf(cfg))
