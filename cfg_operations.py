@@ -1,4 +1,5 @@
 import copy
+from collections import deque
 
 alphabet_lower = list("abcdefghijklmnopqrstuvwxyz")
 alphabet_upper = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -246,7 +247,88 @@ def convert_to_gcnf(old_cfg): # a GCNF is a Generalised Chomsky Normal Form
 
     return cfg
 
-                    
+
+def remove_left_recursion(var, prod):
+    prods = {}
+
+    global alphabet_upper, alphabet_upper_pointer
+    recursive_parts = set()
+    nonrecursive_parts = set()
+    z = alphabet_upper[alphabet_upper_pointer]
+    alphabet_upper_pointer += 1
+    for rhs in prod:
+        if rhs[0] == var:
+            recursive_parts.add(rhs[1:])
+        else:
+            nonrecursive_parts.add(rhs)
+
+    if not recursive_parts:
+        return {var: nonrecursive_parts}
+
+    for y in nonrecursive_parts:
+        prods.setdefault(var, set()).add(y)
+        prods.setdefault(var, set()).add(y + z)
+    for x in recursive_parts:
+        prods.setdefault(z, set()).add(x)
+        prods.setdefault(z, set()).add(x + z)
+
+    return prods
+
+
+def convert_to_gnf(old_cfg):
+    cfg = convert_to_gcnf(old_cfg)
+    
+    ordered_variables = list(cfg.variables)
+    new_productions = {var: set() for var in ordered_variables}
+
+    changed = True
+
+    while changed:
+        changed = False
+        recursive = False
+        for cur in ordered_variables:
+            i = ordered_variables.index(cur)
+            updated = set()
+
+            for rhs in cfg.productions[cur]:
+                if rhs[0] in cfg.variables:
+                    j = ordered_variables.index(rhs[0])
+                    if j < i:
+                        for r in cfg.productions[rhs[0]]:
+                            updated.add(r + rhs[1:])
+                    elif j == i:
+                        recursive = True
+                    else:
+                        updated.add(rhs)
+                else:
+                    updated.add(rhs)
+
+            if updated != cfg.productions[cur]:
+                changed = True
+                cfg.productions[cur] = updated
+
+            if recursive:
+                remove_left_recursion(cur, cfg.productions[cur])
+
+    for cur in ordered_variables:
+        gnf_rhs = set()
+        for rhs in cfg.productions[cur]:
+            if rhs[0] in cfg.variables:
+                queue = deque(rhs)
+                while queue:
+                    current = queue.popleft()
+                    if current[0] in cfg.variables:
+                        for p in cfg.productions[current[0]]:
+                            queue.append(p + current[1:])
+                    else:
+                        gnf_rhs.add(current)
+            else:
+                gnf_rhs.add(rhs)
+        new_productions[cur] = gnf_rhs
+
+    cfg.productions = new_productions
+    return cfg
+
 if __name__ == "__main__":
     cfg = CFG()
     cfg.start = 'S'
@@ -273,4 +355,4 @@ if __name__ == "__main__":
     # cfg.add_production("C", "cCD")
     # cfg.add_production("D", "ddd")
 
-    print(convert_to_gcnf(cfg))
+    print(convert_to_gnf(cfg))
