@@ -25,7 +25,7 @@ def parse_cfg_from_input():
         for symbol in rhs:
             if symbol.isupper() and symbol != 'Ɛ':
                 cfg.variables.add(symbol)
-            elif symbol != 'Ɛ':
+            elif symbol.islower() and symbol != 'Ɛ':
                 cfg.terminals.add(symbol)
         cfg.add_production(lhs, rhs)
 

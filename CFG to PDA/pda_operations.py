@@ -35,14 +35,14 @@ def cfg_to_pda(cfg):
     cfg = convert_to_gnf(cfg)
 
     pda = PDA()
-    pda.states = {'q_start', 'q_loop', 'q_accept'}
+    pda.states = {'q0', 'q1', 'q2'}
     pda.input_alphabet = cfg.terminals
     pda.stack_alphabet = cfg.variables.union(cfg.terminals).union({'$'})
-    pda.initial_state = 'q_start'
+    pda.initial_state = 'q0'
     pda.stack_start_symbol = '$'
-    pda.final_states = {'q_accept'}
+    pda.final_states = {'q2'}
 
-    pda.add_transition('q_start', 'Ɛ', 'Ɛ', 'q_loop', cfg.start + '$')
+    pda.add_transition('q0', 'Ɛ', 'Ɛ', 'q1', cfg.start + '$')
 
     print(cfg.productions.items())
 
@@ -54,9 +54,9 @@ def cfg_to_pda(cfg):
                 push = ''.join(reversed(symbols_to_push)) 
             else:
                 push = 'Ɛ'
-            pda.add_transition('q_loop', a, var, 'q_loop', push)
+            pda.add_transition('q1', a, var, 'q1', push)
 
-    pda.add_transition('q_loop', 'Ɛ', '$', 'q_accept', 'Ɛ')
+    pda.add_transition('q1', 'Ɛ', '$', 'q2', 'Ɛ')
 
     return pda
 
