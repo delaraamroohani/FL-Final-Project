@@ -1,9 +1,7 @@
 import copy
 from collections import deque
 
-alphabet_lower = list("abcdefghijklmnopqrstuvwxyz")
 alphabet_upper = list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-alphabet_lower_pointer = 0
 alphabet_upper_pointer = 0
 
 class CFG:
