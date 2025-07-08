@@ -32,10 +32,10 @@ def parse_cfg_from_input():
     return cfg
 
 def process_cfg_to_pda(cfg):
-    print("\nOriginal CFG:\n")
-    print(cfg)
-    gnf_cfg = convert_to_gnf(cfg)
-    print("\nCFG in Greibach Normal Form (GNF):\n")
-    print(gnf_cfg)
-    pda = cfg_to_pda(gnf_cfg)
+    # print("\nOriginal CFG:\n")
+    # print(cfg)
+    # gnf_cfg = convert_to_gnf(cfg)
+    # print("\nCFG in Greibach Normal Form (GNF):\n")
+    # print(gnf_cfg)
+    pda = cfg_to_pda(cfg)
     return pda

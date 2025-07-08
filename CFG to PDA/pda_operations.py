@@ -5,7 +5,7 @@ class PDA:
         self.states = set()
         self.input_alphabet = set()
         self.stack_alphabet = set()
-        self.transitions = {}
+        self.transitions = set()
         self.initial_state = None
         self.stack_start_symbol = None
         self.final_states = set()
@@ -16,7 +16,7 @@ class PDA:
         s += f"Input Symbols: {self.input_alphabet}\n"   
         s += f"Stack Symbols: {self.stack_alphabet}\n"
         s += f"Transitions:\n"
-        for (state, input_symbol, pop_symbol), (next_state, push_symbol) in self.transitions.items():
+        for (state, input_symbol, pop_symbol, next_state, push_symbol) in self.transitions:
             s += f"  ({state}, {input_symbol}, {pop_symbol}) -> ({next_state}, {push_symbol})\n"
         s += f"Initial State: {self.initial_state}\n"
         s += f"Initial Stack Symbol: {self.stack_start_symbol}\n" 
@@ -24,11 +24,11 @@ class PDA:
         return s
     
     def add_transition(self, state, input_symbol, pop_symbol, next_state, push_symbol):
-        self.transitions[(state, input_symbol, pop_symbol)] = (next_state, push_symbol)
+        self.transitions.add((state, input_symbol, pop_symbol, next_state, push_symbol))
 
     def remove_transition(self, state, input_symbol, pop_symbol, next_state, push_symbol):
-        if ((state, input_symbol, pop_symbol), (next_state, push_symbol)) in self.transitions.items():
-            self.transitions.pop((state, input_symbol, pop_symbol))
+        if (state, input_symbol, pop_symbol, next_state, push_symbol) in self.transitions:
+            self.transitions.remove((state, input_symbol, pop_symbol, next_state, push_symbol))
     
 
 def cfg_to_pda(cfg):
@@ -44,19 +44,21 @@ def cfg_to_pda(cfg):
 
     pda.add_transition('q0', 'Ɛ', 'Ɛ', 'q1', cfg.start + '$')
 
-    print(cfg.productions.items())
-
     for (var, rhss) in cfg.productions.items():
         for rhs in rhss:
+            print(f"Processing production: {var} -> {rhs}")
             a = rhs[0]  
             symbols_to_push = rhs[1:] 
-            if symbols_to_push:
+            if len(symbols_to_push) > 0:
                 push = ''.join(reversed(symbols_to_push)) 
             else:
                 push = 'Ɛ'
             pda.add_transition('q1', a, var, 'q1', push)
 
     pda.add_transition('q1', 'Ɛ', '$', 'q2', 'Ɛ')
+
+    print("Generated PDA:")
+    print(pda)
 
     return pda
 
