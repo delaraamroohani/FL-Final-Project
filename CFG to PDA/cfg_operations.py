@@ -332,6 +332,8 @@ def convert_to_gnf(old_cfg):
                 cur_prod = remove_left_recursion(cfg.variables, cur, cfg.productions[cur])
                 cfg.productions.pop(cur)
                 cfg.productions.update(cur_prod)
+                cfg.variables.update(cur_prod.keys())
+                ordered_variables = list(cfg.variables)
 
     print("Ordered productions:")
     print(cfg)
